@@ -1,6 +1,6 @@
 This project implements a complete, automated, and scalable data engineering pipeline on AWS. It ingests e-commerce data from the public Olist dataset, processes it using a modern ETL framework, builds a star-schema data warehouse in Amazon Redshift, and orchestrates the entire workflow. The final data model is designed to power business intelligence dashboards and analytical queries.
 ### Project Architecture
-![image] (./architecture_diagram_de_project.png)
+<img src="./arch.png" alt="Architecture Diagram" width="600"/>
 The architecture is built on a modern, serverless-first data stack on AWS, emphasizing scalability, automation, and separation of concerns (storage, compute, and analytics).
 - Data Lake (Amazon S3): Serves as the central storage for raw source data (CSVs), processed data (Parquet), and ETL scripts.
 - ETL (AWS Glue & Apache Spark): A serverless Spark job reads the raw data, performs joins and transformations to create a denormalized star schema, and writes the results back to S3 in an optimized columnar format (Parquet).
