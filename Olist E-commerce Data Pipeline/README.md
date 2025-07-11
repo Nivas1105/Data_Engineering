@@ -1,11 +1,11 @@
 This project implements a complete, automated, and scalable data engineering pipeline on AWS. It ingests e-commerce data from the public Olist dataset, processes it using a modern ETL framework, builds a star-schema data warehouse in Amazon Redshift, and orchestrates the entire workflow. The final data model is designed to power business intelligence dashboards and analytical queries.
 ### Project Architecture
 The architecture is built on a modern, serverless-first data stack on AWS, emphasizing scalability, automation, and separation of concerns (storage, compute, and analytics).
-## Data Lake (Amazon S3): Serves as the central storage for raw source data (CSVs), processed data (Parquet), and ETL scripts.
-## ETL (AWS Glue & Apache Spark): A serverless Spark job reads the raw data, performs joins and transformations to create a denormalized star schema, and writes the results back to S3 in an optimized columnar format (Parquet).
-## Data Warehouse (Amazon Redshift Serverless): A high-performance, serverless data warehouse that stores the final fact and dimension tables, making them available for fast analytical queries.
-## Orchestration (AWS Step Functions): A serverless workflow orchestrator that automates the entire pipeline, ensuring the Glue ETL job runs before the data is loaded into Redshift. This provides robustness and error handling.
-## Permissions (AWS IAM): Dedicated IAM roles with least-privilege permissions are used for each service, ensuring secure access between components.
+### Data Lake (Amazon S3): Serves as the central storage for raw source data (CSVs), processed data (Parquet), and ETL scripts.
+### ETL (AWS Glue & Apache Spark): A serverless Spark job reads the raw data, performs joins and transformations to create a denormalized star schema, and writes the results back to S3 in an optimized columnar format (Parquet).
+### Data Warehouse (Amazon Redshift Serverless): A high-performance, serverless data warehouse that stores the final fact and dimension tables, making them available for fast analytical queries.
+### Orchestration (AWS Step Functions): A serverless workflow orchestrator that automates the entire pipeline, ensuring the Glue ETL job runs before the data is loaded into Redshift. This provides robustness and error handling.
+### Permissions (AWS IAM): Dedicated IAM roles with least-privilege permissions are used for each service, ensuring secure access between components.
 ### The Data Model: A Star Schema for Analytics
 To optimize for fast analytical queries (the goal of a data warehouse), the original normalized source data was denormalized into a Star Schema. This model features a central fact table surrounded by descriptive dimension tables.
 fct_order_items (Fact Table): A central table containing quantitative measures (price, freight_value, payment_value) and foreign keys to the dimension tables. Each row represents a single item within an order.
