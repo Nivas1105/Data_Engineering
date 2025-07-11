@@ -1,0 +1,31 @@
+MANUAL DATA UPLOAD FROM S3 USING COPY COMMAND IN REDSHIFT QUERY EDITOR
+
+-- TRUNCATE tables before loading to ensure no duplicates
+TRUNCATE public.dim_customers;
+TRUNCATE public.dim_products;
+TRUNCATE public.dim_sellers;
+TRUNCATE public.fct_order_items;
+
+-- Load dim_customers
+COPY public.dim_customers
+FROM 's3://(s3_bucket)/processed_data/dim_customers/'
+IAM_ROLE '(IAM_ROLE)'
+FORMAT AS PARQUET;
+
+-- Load dim_products
+COPY public.dim_products
+FROM 's3://(s3_bucket)/processed_data/dim_products/'
+IAM_ROLE '(IAM_ROLE)'
+FORMAT AS PARQUET;
+
+-- Load dim_sellers
+COPY public.dim_sellers
+FROM 's3://(s3_bucket)/processed_data/dim_sellers/'
+IAM_ROLE '(IAM_ROLE)'
+FORMAT AS PARQUET;
+
+-- Load fct_order_items
+COPY public.fct_order_items
+FROM 's3://(s3_bucket)/processed_data/fct_order_items/'
+IAM_ROLE '(IAM_ROLE)'
+FORMAT AS PARQUET;
