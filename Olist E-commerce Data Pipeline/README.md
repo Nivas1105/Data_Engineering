@@ -6,6 +6,8 @@ The architecture is built on a modern, serverless-first data stack on AWS, empha
 - Data Warehouse (Amazon Redshift Serverless): A high-performance, serverless data warehouse that stores the final fact and dimension tables, making them available for fast analytical queries.
 - Orchestration (AWS Step Functions): A serverless workflow orchestrator that automates the entire pipeline, ensuring the Glue ETL job runs before the data is loaded into Redshift. This provides robustness and error handling.
 - Permissions (AWS IAM): Dedicated IAM roles with least-privilege permissions are used for each service, ensuring secure access between components.
+
+![Architecture Diagram](./architecture_diagram_de_project.png)
 ### The Data Model: A Star Schema for Analytics
 To optimize for fast analytical queries (the goal of a data warehouse), the original normalized source data was denormalized into a Star Schema. This model features a central fact table surrounded by descriptive dimension tables.
 fct_order_items (Fact Table): A central table containing quantitative measures (price, freight_value, payment_value) and foreign keys to the dimension tables. Each row represents a single item within an order.
