@@ -14,10 +14,6 @@ PATH_TO_ROOT = "certs/AmazonRootCA1.pem"
 TOPIC = "dt/battery_data"
 
 def parse_bms_message(message: can.Message) -> dict:
-    """
-    Parses a CAN message and transforms it into a structured dictionary.
-    This is the core of our "Transform" step.
-    """
     message_id = message.arbitration_id
     data = message.data
     decoded_data = {}
