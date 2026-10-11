@@ -1,11 +1,4 @@
-# Databricks notebook source
-# MAGIC %md
-# MAGIC # 01 - Bronze -> Silver: Clean & Standardize Vehicle Telemetry
-# MAGIC
-# MAGIC Typical silver-layer responsibilities: dedupe, enforce types/ranges, flag bad readings,
-# MAGIC and add derived columns downstream consumers shouldn't have to recompute themselves.
 
-# COMMAND ----------
 
 CATALOG = "main"
 SCHEMA = "ev_fleet"
@@ -15,11 +8,6 @@ from pyspark.sql import functions as F
 
 bronze = spark.table(f"{CATALOG}.{SCHEMA}.bronze_vehicle_telemetry")
 
-# COMMAND ----------
-
-# MAGIC %md ### Data quality checks — log what silver rejects instead of silently dropping it
-
-# COMMAND ----------
 
 before_count = bronze.count()
 

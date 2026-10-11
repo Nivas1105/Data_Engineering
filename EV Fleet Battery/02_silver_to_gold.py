@@ -1,12 +1,4 @@
-# Databricks notebook source
-# MAGIC %md
-# MAGIC # 02 - Silver -> Gold: Fleet KPIs & Vehicle-Level ML Features
-# MAGIC
-# MAGIC Two gold tables:
-# MAGIC 1. `gold_fleet_daily_kpi` — fleet-wide daily rollups for the dashboard
-# MAGIC 2. `gold_vehicle_features` — one row per vehicle, engineered features for the SoH model
 
-# COMMAND ----------
 
 CATALOG = "main"
 SCHEMA = "ev_fleet"
@@ -16,11 +8,6 @@ from pyspark.sql import functions as F
 
 silver = spark.table(f"{CATALOG}.{SCHEMA}.silver_vehicle_telemetry")
 
-# COMMAND ----------
-
-# MAGIC %md ### Gold table 1 — fleet daily KPIs (dashboard source)
-
-# COMMAND ----------
 
 fleet_daily_kpi = (
     silver.groupBy("date", "model", "region")
@@ -39,13 +26,6 @@ fleet_daily_kpi.write.mode("overwrite").format("delta").saveAsTable(
     f"{CATALOG}.{SCHEMA}.gold_fleet_daily_kpi"
 )
 display(fleet_daily_kpi.orderBy(F.desc("date")).limit(10))
-
-# COMMAND ----------
-
-# MAGIC %md ### Gold table 2 — vehicle-level features for the ML notebook
-# MAGIC One row per vehicle: usage patterns + current SoH + the label we'll try to predict/flag.
-
-# COMMAND ----------
 
 vehicle_features = (
     silver.groupBy("vehicle_id", "model", "region")

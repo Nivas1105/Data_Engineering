@@ -1,24 +1,3 @@
-# Databricks notebook source
-# MAGIC %md
-# MAGIC # 00 - Generate Synthetic EV Fleet Telemetry
-# MAGIC
-# MAGIC Simulates the kind of daily-rollup telemetry an EV manufacturer's connected-vehicle
-# MAGIC platform would land in a lakehouse: one row per vehicle per day, covering battery
-# MAGIC state of charge, charging behavior, thermal exposure, and odometer.
-# MAGIC
-# MAGIC A small subset of vehicles (~4%) are seeded with a "bad battery batch" — accelerated
-# MAGIC State-of-Health (SoH) degradation — so the ML notebook later has a real anomaly to find,
-# MAGIC not just noise.
-# MAGIC
-# MAGIC Output: `main.ev_fleet.bronze_vehicle_telemetry` (Delta table, Unity Catalog)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Config — adjust catalog/schema if yours differ.
-# MAGIC Free Edition workspaces come with a default catalog; run `SHOW CATALOGS` if `main` doesn't exist.
-
-# COMMAND ----------
 
 CATALOG = "main"
 SCHEMA = "ev_fleet"
@@ -27,7 +6,6 @@ spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
 spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{SCHEMA}")
 spark.sql(f"USE {CATALOG}.{SCHEMA}")
 
-# COMMAND ----------
 
 import numpy as np
 import pandas as pd
@@ -44,18 +22,10 @@ vehicle_ids = [f"RVN-{10000+i}" for i in range(N_VEHICLES)]
 regions = rng.choice(
     ["Southwest", "Pacific NW", "Northeast", "Midwest", "Southeast"], N_VEHICLES
 )
-# ~4% of the fleet has a manufacturing-defect battery batch -> accelerated degradation
+
 bad_batch = rng.random(N_VEHICLES) < 0.04
-delivery_offset_days = rng.integers(0, 120, N_VEHICLES)  # staggered fleet delivery
+delivery_offset_days = rng.integers(0, 120, N_VEHICLES) 
 
-# COMMAND ----------
-
-# MAGIC %md ### Simulate daily telemetry per vehicle
-# MAGIC State of Health (SoH) decays daily as a function of: fast-charge frequency,
-# MAGIC thermal exposure (ambient + battery temp), and depth-of-discharge (DoD).
-# MAGIC Bad-batch vehicles degrade 3-6x faster — the pattern the ML model should learn to flag.
-
-# COMMAND ----------
 
 records = []
 soh = np.full(N_VEHICLES, 100.0)
@@ -87,7 +57,6 @@ for day_offset in range(N_DAYS):
             base_degrade *= rng.uniform(3.0, 6.0)
         soh[v] = max(60.0, soh[v] - base_degrade)
 
-        # occasional fault code, more likely as SoH drops or on bad-batch vehicles
         fault_prob = 0.01 + (0.15 if soh[v] < 85 else 0) + (0.05 if bad_batch[v] else 0)
         fault_code = None
         if rng.random() < fault_prob:
@@ -111,7 +80,7 @@ for day_offset in range(N_DAYS):
                 "fast_charge_event": bool(fast_charge_today),
                 "state_of_health_pct": round(soh[v], 3),
                 "fault_code": fault_code,
-                "is_known_bad_batch": bool(bad_batch[v]),  # ground truth, drop before training
+                "is_known_bad_batch": bool(bad_batch[v]), 
             }
         )
 
@@ -119,11 +88,6 @@ pdf = pd.DataFrame(records)
 print(f"Generated {len(pdf):,} rows across {N_VEHICLES} vehicles")
 pdf.head()
 
-# COMMAND ----------
-
-# MAGIC %md ### Write to Bronze Delta table
-
-# COMMAND ----------
 
 df = spark.createDataFrame(pdf)
 df.write.mode("overwrite").format("delta").saveAsTable(

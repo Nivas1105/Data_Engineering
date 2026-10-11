@@ -1,30 +1,3 @@
-# Databricks notebook source
-# MAGIC %md
-# MAGIC # 03 - Battery Health ML: Expected-Degradation Model + Anomaly Flagging
-# MAGIC
-# MAGIC **Problem framing** (this is the part worth explaining in an interview, not just the code):
-# MAGIC we don't actually know in advance which vehicles have a defective battery batch — that's
-# MAGIC the whole point of building this. So instead of training a classifier directly on
-# MAGIC `is_known_bad_batch` (which wouldn't exist as a label in production), we:
-# MAGIC
-# MAGIC 1. Train a regression model that predicts **expected** SoH degradation from usage patterns
-# MAGIC    alone (fast-charge rate, thermal exposure, depth of discharge, mileage).
-# MAGIC 2. Compute the **residual** — actual degradation minus expected degradation — for every vehicle.
-# MAGIC 3. Flag vehicles whose residual is far above the fleet norm as anomalous: degrading faster
-# MAGIC    than their usage pattern explains, i.e. a likely hardware/manufacturing issue rather than
-# MAGIC    a driving-behavior issue.
-# MAGIC 4. Only then do we check the flags against `is_known_bad_batch` — purely to validate the
-# MAGIC    approach here, since we happen to have ground truth in simulation.
-# MAGIC
-# MAGIC This mirrors how a fleet ops team would actually use this: they don't have a "defect" label
-# MAGIC to train on until vehicles start failing, so residual-based detection has to do the work.
-
-# COMMAND ----------
-
-# MAGIC %pip install xgboost mlflow --quiet
-# MAGIC dbutils.library.restartPython()
-
-# COMMAND ----------
 
 CATALOG = "main"
 SCHEMA = "ev_fleet"
@@ -42,14 +15,6 @@ mlflow.set_registry_uri("databricks-uc")
 features_df = spark.table(f"{CATALOG}.{SCHEMA}.gold_vehicle_features").toPandas()
 print(f"Vehicles: {len(features_df)} | Known bad-batch: {features_df['is_known_bad_batch'].sum()}")
 features_df.head()
-
-# COMMAND ----------
-
-# MAGIC %md ### Train the "expected degradation" regressor
-# MAGIC Trained only on usage/thermal features — deliberately excludes any batch/defect signal.
-
-# COMMAND ----------
-
 feature_cols = [
     "days_in_service",
     "avg_battery_temp_c",
@@ -87,14 +52,6 @@ with mlflow.start_run(run_name="battery_soh_expected_degradation") as run:
 
     run_id = run.info.run_id
 
-# COMMAND ----------
-
-# MAGIC %md ### Score the full fleet, compute residuals, flag anomalies
-# MAGIC Flag threshold: residual > 95th percentile of the fleet-wide residual distribution.
-# MAGIC (Same "don't use a naive fixed cutoff" instinct as the incident-detection project —
-# MAGIC a fixed threshold like "residual > 1.0" wouldn't adapt if the fleet's baseline shifts.)
-
-# COMMAND ----------
 
 features_df["expected_degradation_pct"] = model.predict(X)
 features_df["residual"] = features_df["soh_degradation_pct"] - features_df["expected_degradation_pct"]
@@ -116,22 +73,12 @@ with mlflow.start_run(run_id=run_id):
     mlflow.log_metric("validation_precision", precision)
     mlflow.log_metric("validation_recall", recall)
 
-# COMMAND ----------
-
-# MAGIC %md ### Register the model in Unity Catalog
-
-# COMMAND ----------
 
 model_name = f"{CATALOG}.{SCHEMA}.battery_soh_expected_degradation"
 model_uri = f"runs:/{run_id}/model"
 registered = mlflow.register_model(model_uri=model_uri, name=model_name)
 print(f"Registered {model_name} version {registered.version}")
 
-# COMMAND ----------
-
-# MAGIC %md ### Write scored results to a Gold table the dashboard can read
-
-# COMMAND ----------
 
 scored_spark = spark.createDataFrame(
     features_df[

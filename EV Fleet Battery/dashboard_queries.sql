@@ -1,8 +1,3 @@
--- Databricks SQL / Lakeview dashboard queries
--- Build each of these as a separate dataset in the dashboard, then add matching visuals.
--- Run these in the SQL Editor first to confirm they return rows, then wire each into a
--- Lakeview dashboard tile (Dashboards -> Create Dashboard -> Add data -> paste query).
-
 USE main.ev_fleet;
 
 -- ============================================================
